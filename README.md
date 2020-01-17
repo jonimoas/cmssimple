@@ -43,3 +43,5 @@ libraries used:
         https://github.com/couchbase/couchnode
         https://github.com/reworkcss/css
         https://github.com/Jxck/html2json
+
+![Demo Placeholder](demo.gif)
