@@ -7,6 +7,7 @@ var NAME = process.env.NAME;
 var ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 var DEFAULT_BUCKET = process.env.DEFAULT_BUCKET;
 var PAGES_BUCKET = process.env.PAGES_BUCKET;
+var PLUGINS_BUCKET = process.env.PLUGINS_BUCKET;
 var port = process.env.PORT;
 //libs
 const express = require("express");
@@ -17,9 +18,9 @@ var html2json = require("html2json").html2json;
 var json2html = require("html2json").json2html;
 var couchbase = require("couchbase");
 var index = require("./index.json");
+var npm = require("npm");
 //inits
 const app = express();
-
 const options = {
   allowedHeaders: [
     "Origin",
@@ -39,6 +40,7 @@ var cluster = new couchbase.Cluster(COUCHBASE_HOST);
 cluster.authenticate(COUCHBASE_USERNAME, COUCHBASE_PASSWORD);
 var defaultBucket = cluster.openBucket(DEFAULT_BUCKET);
 var pagesBucket = cluster.openBucket(PAGES_BUCKET);
+var pluginsBucket = cluster.openBucket(PLUGINS_BUCKET);
 var myIP = HOST;
 var siteName = NAME;
 var password = ADMIN_PASSWORD;
@@ -323,6 +325,70 @@ app.post("/colorScheme", (req, res) => {
 });
 app.get("/siteName", (req, res) => {
   res.send(siteName);
+});
+app.get("/plugins/:name/:call", (req, res) => {
+  pluginsBucket.get(req.params.name, async function(err, result) {
+    var func = new Function(
+      "exports",
+      "require",
+      "module",
+      "__filename",
+      "__dirname",
+      "return " + result.value[req.params.call][0]
+    )(exports, require, module, __filename, __dirname);
+    let response = await func(req.query);
+    res.send(response);
+  });
+});
+app.post("/plugins/:name/:call", (req, res) => {
+  pluginsBucket.get(req.params.name),
+    async function(err, result) {
+      var func = new Function(
+        "exports",
+        "require",
+        "module",
+        "__filename",
+        "__dirname",
+        "return " + result.value[req.params.call][0]
+      )(exports, require, module, __filename, __dirname);
+      let response = await func(req.query, req.body);
+      res.send(response);
+    };
+});
+
+app.post("/installPlugin/:name", (req, res) => {
+  if (req.query.password != password) {
+    res.send(400);
+    return;
+  }
+  console.log(req.body);
+  pluginsBucket.upsert(req.params.name, req.body, async function(err, result) {
+    let pluginList = req.body[Object.keys(req.body)[0]][1];
+    npm.load(function(err) {
+      npm.commands.install(pluginList, function(er, data) {
+        res.send(200);
+      });
+    });
+  });
+});
+app.get("/reInstallDeps/:name", (req, res) => {
+  pluginsBucket.get(req.params.name, async function(err, result) {
+    let pluginList = result.value[1];
+    npm.load(function(err) {
+      npm.commands.install(pluginList, function(er, data) {
+        res.send(200);
+      });
+    });
+  });
+});
+app.get("/removePlugin/:name", (req, res) => {
+  if (req.query.password != password) {
+    res.send(400);
+    return;
+  }
+  pluginsBucket.remove(req.params.name, function(err, result) {
+    res.send(200);
+  });
 });
 console.log(index);
 app.listen(port, () => console.log(`CMSSimple online on ${port}!`));
