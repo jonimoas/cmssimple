@@ -1,25 +1,33 @@
 //docker vars
-var COUCHBASE_USERNAME = process.env.COUCHBASE_USERNAME;
-var COUCHBASE_PASSWORD = process.env.COUCHBASE_PASSWORD;
-var COUCHBASE_HOST = process.env.COUCHBASE_HOST;
 var HOST = process.env.HOST;
 var NAME = process.env.NAME;
 var ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-var DEFAULT_BUCKET = process.env.DEFAULT_BUCKET;
-var PAGES_BUCKET = process.env.PAGES_BUCKET;
-var PLUGINS_BUCKET = process.env.PLUGINS_BUCKET;
 var port = process.env.PORT;
+
 //libs
+const low = require("lowdb");
+const FileSync = require("lowdb/adapters/FileSync");
 const express = require("express");
 var css = require("css");
 var cors = require("cors");
 const bodyParser = require("body-parser");
 var html2json = require("html2json").html2json;
 var json2html = require("html2json").json2html;
-var couchbase = require("couchbase");
 var index = require("./index.json");
 var npm = require("npm");
 //inits
+
+const adapter = new FileSync("db.json");
+const db = low(adapter);
+db.defaults({
+  pages: [],
+  plugins: [],
+  main: [
+    { name: "index", content: index },
+    { name: "nav", content: undefined },
+    { name: "logo", content: undefined }
+  ]
+}).write();
 const app = express();
 const options = {
   allowedHeaders: [
@@ -36,348 +44,380 @@ const options = {
 };
 app.use(cors(options));
 app.use(bodyParser.json());
-var cluster = new couchbase.Cluster(COUCHBASE_HOST);
-cluster.authenticate(COUCHBASE_USERNAME, COUCHBASE_PASSWORD);
-var defaultBucket = cluster.openBucket(DEFAULT_BUCKET);
-var pagesBucket = cluster.openBucket(PAGES_BUCKET);
-var pluginsBucket = cluster.openBucket(PLUGINS_BUCKET);
 var myIP = HOST;
 var siteName = NAME;
 var password = ADMIN_PASSWORD;
-defaultBucket.on("error", function(err) {
-  console.log("CONNECT ERROR:", err);
+app.get("/getPluginList", (req, res) => {
+  res.send(
+    db
+      .get("plugins")
+      .map("name")
+      .value()
+  );
 });
-pagesBucket.on("error", function(err) {
-  console.log("CONNECT ERROR:", err);
+app.get("/plugin/:name", (req, res) => {
+  if (req.query.password != password) {
+    res.send(400);
+    return;
+  }
+  let response = db
+    .get("plugins")
+    .find({ name: req.params.name })
+    .value();
+  res.send(response.content);
 });
 app.post("/updateMain", (req, res) => {
   if (req.query.password != password) {
     res.send(400);
     return;
   }
-  defaultBucket.upsert("index", html2json(req.body.content), function(
-    err,
-    result
-  ) {
-    res.send(200);
-  });
+  db.get("main")
+    .push({ name: "index", content: req.body.content })
+    .write();
+  res.send(200);
 });
 app.get("/init", (req, res) => {
   if (req.query.password != password) {
     res.send(400);
     return;
   }
-  defaultBucket.upsert("index", index, function(err, result) {
-    res.send(200);
-  });
+  db.get("main")
+    .push({ name: "index", content: index })
+    .write();
+  res.send(200);
 });
 app.get("/deletePage/:menu/:submenu/:name", (req, res) => {
-  pagesBucket.remove(
-    req.params.menu + "_" + req.params.submenu + "_" + req.params.name,
-    function(err, result) {
-      defaultBucket.get("navigation", function(err, result) {
-        let newJson;
-        newJson = result.value;
-        newJson.child = newJson.child.filter(
-          r => r.child[0].text != req.params.name
-        );
-        defaultBucket.upsert(
-          "navigation",
-          Object.assign({}, newJson, {}),
-          function(err, result) {
-            console.log(err);
-            res.send(200);
-          }
-        );
-      });
-    }
+  if (req.query.password != password) {
+    res.send(400);
+    return;
+  }
+  db.get("pages")
+    .remove({
+      name: req.params.menu + "_" + req.params.submenu + "_" + req.params.name
+    })
+    .write();
+  navigation = db
+    .get("main")
+    .find({ name: "nav" })
+    .value();
+  navigation.child = navigation.child.filter(
+    r => r.child[0].text != req.params.name
   );
+  db.get("main")
+    .remove({ name: "nav" })
+    .write();
+  db.get("main")
+    .push({ name: "nav", content: navigation })
+    .write();
+  res.send(200);
 });
 app.post("/addPage/:menu/:submenu/:name", (req, res) => {
   if (req.query.password != password) {
     res.send(400);
     return;
   }
-  pagesBucket.upsert(
-    req.params.menu + "_" + req.params.submenu + "_" + req.params.name,
-    html2json(req.body.content),
-    function(err, result) {
-      console.log(err);
-      defaultBucket.get("navigation", function(err, result) {
-        let newJson;
-        if (result == null) {
-          newJson = { node: "root", child: [] };
-          newJson["child"].push({
-            node: "element",
-            tag: "a",
-            attr: {
-              onclick: "getPage(this.id)",
-              id:
-                req.params.menu +
-                "_" +
-                req.params.submenu +
-                "_" +
-                req.params.name,
-              href:
-                "#/" +
-                req.params.menu +
-                "_" +
-                req.params.submenu +
-                "_" +
-                req.params.name
-            },
-            child: [
-              {
-                node: "text",
-                text: req.params.name
-              }
-            ]
-          });
-          defaultBucket.upsert(
-            "navigation",
-            Object.assign({}, newJson, {}),
-            function(err, result) {
-              console.log(err);
-              res.send(200);
-            }
-          );
-        } else {
-          newJson = result.value;
-          newJson.child = newJson.child.filter(
-            r => r.child[0].text != req.params.name
-          );
-          newJson.child.push({
-            node: "element",
-            tag: "a",
-            attr: {
-              onclick: "getPage(this.id)",
-              id:
-                req.params.menu +
-                "_" +
-                req.params.submenu +
-                "_" +
-                req.params.name,
-              href:
-                "#/" +
-                req.params.menu +
-                "_" +
-                req.params.submenu +
-                "_" +
-                req.params.name
-            },
-            child: [
-              {
-                node: "text",
-                text: req.params.name
-              }
-            ]
-          });
-          defaultBucket.upsert(
-            "navigation",
-            Object.assign({}, newJson, {}),
-            function(err, result) {
-              console.log(err);
-              res.send(200);
-            }
-          );
+  db.get("pages")
+    .remove({
+      name: req.params.menu + "_" + req.params.submenu + "_" + req.params.name
+    })
+    .write();
+  db.get("pages")
+    .push({
+      name: req.params.menu + "_" + req.params.submenu + "_" + req.params.name,
+      content: html2json(req.body.content)
+    })
+    .write();
+  let navigation = db
+    .get("main")
+    .find({ name: "nav" })
+    .value();
+  console.log(navigation);
+  if (navigation.content == undefined) {
+    navigation.content = { node: "root", child: [] };
+    navigation.content["child"].push({
+      node: "element",
+      tag: "a",
+      attr: {
+        onclick: "getPage(this.id)",
+        id: req.params.menu + "_" + req.params.submenu + "_" + req.params.name,
+        href:
+          "#/" +
+          req.params.menu +
+          "_" +
+          req.params.submenu +
+          "_" +
+          req.params.name
+      },
+      child: [
+        {
+          node: "text",
+          text: req.params.name
         }
-      });
-    }
+      ]
+    });
+  } else {
+    navigation.content.child = navigation.content.child.filter(
+      r => r.child[0].text != req.params.name
+    );
+    navigation.content.child.push({
+      node: "element",
+      tag: "a",
+      attr: {
+        onclick: "getPage(this.id)",
+        id: req.params.menu + "_" + req.params.submenu + "_" + req.params.name,
+        href:
+          "#/" +
+          req.params.menu +
+          "_" +
+          req.params.submenu +
+          "_" +
+          req.params.name
+      },
+      child: [
+        {
+          node: "text",
+          text: req.params.name
+        }
+      ]
+    });
+  }
+  db.get("main")
+    .remove({ name: "nav" })
+    .write();
+  console.log(
+    db
+      .get("main")
+      .push({ name: "nav", content: navigation.content })
+      .write()
   );
+  res.send(200);
 });
 app.get("/getPage/:menu/:submenu/:name", (req, res) => {
-  pagesBucket.get(
-    req.params.menu + "_" + req.params.submenu + "_" + req.params.name,
-    function(err, result) {
-      console.log(result);
-      res.send(json2html(result.value));
-    }
+  res.send(
+    json2html(
+      db
+        .get("pages")
+        .find({
+          name:
+            req.params.menu + "_" + req.params.submenu + "_" + req.params.name
+        })
+        .value().content
+    )
   );
 });
 app.get("/navigation", (req, res) => {
-  defaultBucket.get("navigation", function(err, result) {
-    if (result == null) {
-      res.send("Your Pages will show here!");
-    } else {
-      console.log(result);
-      res.send(json2html(result.value));
-    }
-  });
+  let navigation = db
+    .get("main")
+    .find({ name: "nav" })
+    .value();
+  if (navigation.content == undefined) {
+    res.send("");
+  } else {
+    res.send(json2html(navigation.content));
+  }
 });
 app.get("/navJson", (req, res) => {
-  defaultBucket.get("navigation", function(err, result) {
-    if (result == null) {
-      res.send("Your Pages will show here!");
-    } else {
-      console.log(result);
-      res.send(result.value);
-    }
-  });
+  res.send(
+    db
+      .get("main")
+      .find({ name: "nav" })
+      .value().content
+  );
 });
 app.post("/navJson", (req, res) => {
   if (req.query.password != password) {
     res.send(400);
     return;
   }
-  defaultBucket.upsert("navigation", req.body.content, function(err, result) {
-    res.send(200);
-  });
+  db.get("main")
+    .remove({ name: "nav" })
+    .write();
+  db.get("main")
+    .push({ name: "nav", content: req.body.content })
+    .write();
 });
 app.get("/logo", (req, res) => {
-  defaultBucket.get("logo", function(err, result) {
-    if (result == null) {
-      res.send("Your Logo Will Show Here!<br>");
-    } else {
-      console.log(result);
-      res.send(json2html(result.value));
-    }
-  });
+  let logo = db
+    .get("main")
+    .find({ name: "logo" })
+    .value();
+  if (logo.content == undefined) {
+    res.send("");
+  } else {
+    res.send(json2html(logo.content));
+  }
 });
 app.post("/logo", (req, res) => {
   if (req.query.password != password) {
     res.send(400);
     return;
   }
-  defaultBucket.upsert(
-    "logo",
-    {
-      node: "root",
-      child: [
-        {
-          node: "element",
-          tag: "p",
-          child: [
-            {
-              node: "element",
-              tag: "img",
-              attr: {
-                src: req.body.content
+  db.get("main")
+    .remove({ name: "logo" })
+    .write();
+  db.get("main")
+    .push({
+      name: "logo",
+      content: {
+        node: "root",
+        child: [
+          {
+            node: "element",
+            tag: "p",
+            child: [
+              {
+                node: "element",
+                tag: "img",
+                attr: {
+                  src: req.body.content
+                }
               }
-            }
-          ]
-        }
-      ]
-    },
-    function(err, result) {
-      res.send(200);
-    }
-  );
+            ]
+          }
+        ]
+      }
+    })
+    .write();
+  res.send(200);
 });
 app.get("/navList", (req, res) => {
   let respArray = [];
-  defaultBucket.get("navigation", function(err, result) {
-    console.log(result);
-    if (result == null) {
-      respArray = [];
-    } else {
-      for (const n of result.value.child) {
-        respArray.push(n.attr.id);
-      }
+  nav = db
+    .get("main")
+    .find({ name: "nav" })
+    .value();
+  if (nav == null) {
+    respArray = [];
+  } else {
+    for (const n of nav.content.child) {
+      respArray.push(n.attr.id);
     }
-    res.send(respArray);
-  });
+  }
+  res.send(respArray);
 });
 app.get("/", (req, res) => {
-  defaultBucket.get("index", function(err, result) {
-    if (result == null) {
-      res.send("Please use the /init call to initialize CMSSimple!");
-    } else {
-      console.log(result);
-      res.send(
-        json2html(result.value)
-          .split("http://localhost:80")
-          .join(myIP)
-      );
-    }
-  });
+  console.log(
+    db
+      .get("main")
+      .find({ name: "index" })
+      .value()
+  );
+  res.send(
+    json2html(
+      db
+        .get("main")
+        .find({ name: "index" })
+        .value().content
+    )
+      .split("http://localhost:80")
+      .join(myIP)
+  );
 });
 app.get("/colorScheme", (req, res) => {
-  defaultBucket.get("index", function(err, result) {
-    if (result == null) {
-      res.send("");
-    } else {
-      res.send(
-        css.parse(
-          result.value.child[0].child
-            .find(r => r.tag == "head")
-            .child.find(r => r.tag == "style" && r.attr.id == "colors").child[0]
-            .text
-        )
-      );
-    }
-  });
+  let result = db
+    .get("main")
+    .find({ name: "index" })
+    .value().content;
+  res.send(
+    css.parse(
+      result.child[0].child
+        .find(r => r.tag == "head")
+        .child.find(r => r.tag == "style" && r.attr.id == "colors").child[0]
+        .text
+    )
+  );
 });
 app.post("/colorScheme", (req, res) => {
   if (req.query.password != password) {
     res.send(400);
     return;
   }
-  defaultBucket.get("index", function(err, result) {
-    result.value.child[0].child
-      .find(r => r.tag == "head")
-      .child.find(
-        r => r.tag == "style" && r.attr.id == "colors"
-      ).child[0].text = css.stringify(req.body.content);
-    defaultBucket.upsert("index", result.value, function(err, result) {
-      res.send(200);
-    });
-  });
+  let result = db
+    .get("main")
+    .find({ name: "index" })
+    .value().content;
+  result.child[0].child
+    .find(r => r.tag == "head")
+    .child.find(
+      r => r.tag == "style" && r.attr.id == "colors"
+    ).child[0].text = css.stringify(req.body.content);
+  db.get("main")
+    .remove({ name: "index" })
+    .write();
+  db.get("main")
+    .push({ name: "index", content: result })
+    .write();
+  res.send(200);
 });
 app.get("/siteName", (req, res) => {
   res.send(siteName);
 });
-app.get("/plugins/:name/:call", (req, res) => {
-  pluginsBucket.get(req.params.name, async function(err, result) {
-    var func = new Function(
-      "exports",
-      "require",
-      "module",
-      "__filename",
-      "__dirname",
-      "return " + result.value[req.params.call][0]
-    )(exports, require, module, __filename, __dirname);
-    let response = await func(req.query);
-    res.send(response);
-  });
+app.get("/plugins/:name/:call", async (req, res) => {
+  let result = db
+    .get("plugins")
+    .find({ name: req.params.name })
+    .value().content;
+  var func = new Function(
+    "exports",
+    "require",
+    "module",
+    "__filename",
+    "__dirname",
+    "return " + result[req.params.call][0]
+  )(exports, require, module, __filename, __dirname);
+  let response = await func(req.query);
+  res.send(response);
 });
-app.post("/plugins/:name/:call", (req, res) => {
-  pluginsBucket.get(req.params.name),
-    async function(err, result) {
-      var func = new Function(
-        "exports",
-        "require",
-        "module",
-        "__filename",
-        "__dirname",
-        "return " + result.value[req.params.call][0]
-      )(exports, require, module, __filename, __dirname);
-      let response = await func(req.query, req.body);
-      res.send(response);
-    };
+app.post("/plugins/:name/:call", async (req, res) => {
+  let result = db
+    .get("plugins")
+    .find({ name: req.params.name })
+    .value().content;
+  var func = new Function(
+    "exports",
+    "require",
+    "module",
+    "__filename",
+    "__dirname",
+    "return " + result[req.params.call][0]
+  )(exports, require, module, __filename, __dirname);
+  let response = await func(req.query, req.body);
+  res.send(response);
 });
-
 app.post("/installPlugin/:name", (req, res) => {
   if (req.query.password != password) {
     res.send(400);
     return;
   }
   console.log(req.body);
-  pluginsBucket.upsert(req.params.name, req.body, async function(err, result) {
-    let pluginList = req.body[Object.keys(req.body)[0]][1];
-    npm.load(function(err) {
-      npm.commands.install(pluginList, function(er, data) {
-        res.send(200);
-      });
+  db.get("plugins")
+    .remove({ name: req.params.name })
+    .write();
+  db.get("plugins")
+    .push({ name: req.params.name, content: req.body })
+    .write();
+  console.log(req.body);
+
+  let pluginList = req.body[Object.keys(req.body)[0]][1];
+  npm.load(function(err) {
+    npm.commands.install(pluginList, function(er, data) {
+      res.send(200);
     });
   });
 });
 app.get("/reInstallDeps/:name", (req, res) => {
-  pluginsBucket.get(req.params.name, async function(err, result) {
-    let pluginList = result.value[1];
-    npm.load(function(err) {
-      npm.commands.install(pluginList, function(er, data) {
-        res.send(200);
-      });
+  if (req.query.password != password) {
+    res.send(400);
+    return;
+  }
+  result = db
+    .get("plugins")
+    .find({ name: req.params.name })
+    .value().content;
+  let pluginList = result[1];
+  npm.load(function(err) {
+    npm.commands.install(pluginList, function(er, data) {
+      res.send(200);
     });
   });
 });
@@ -386,9 +426,10 @@ app.get("/removePlugin/:name", (req, res) => {
     res.send(400);
     return;
   }
-  pluginsBucket.remove(req.params.name, function(err, result) {
-    res.send(200);
-  });
+  db.get("plugins")
+    .remove({ name: req.params.name })
+    .write();
+  res.send(200);
 });
 console.log(index);
 app.listen(port, () => console.log(`CMSSimple online on ${port}!`));
