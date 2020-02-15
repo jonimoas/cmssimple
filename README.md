@@ -19,7 +19,9 @@ the editor can be used to add a logo and a color scheme, and then the user can s
 NOTES during deployment.
 
 The ports are hardcoded in the dockerfiles, to be 80 for the cms and 2000 for the editor, if there is a requirement for change, the dockerfiles need to be changed accordingly and the images rebuilt.
-The document and code editor for pages do not work well together, you may lose content switching from the code to the document editor
+
+The document and code editor for pages do not work well together, you may lose content switching from the code to the document editor.
+
 The rest API editor has a specific format for the new calls that need to be made and is as follows for a call that uses momentjs to return the date and a value that has been sent:
 
         {"momentTest": ["function(a){var moment=require('moment');console.log(moment()); return [a,moment()];}",["moment"]]}
