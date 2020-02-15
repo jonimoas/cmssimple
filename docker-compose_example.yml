@@ -4,7 +4,7 @@ version: "2"
 services:
   #####################################################################################################
   editor:
-    image: jonimoas/cmssimple_editor:0.1
+    image: jonimoas/cmssimple_editor:0.2
     container_name: cmssimple_editor
     restart: always
     ports:
@@ -13,19 +13,14 @@ services:
       EDITOR_PORT: 2000
       HOST:
   cms:
-    image: jonimoas/cmssimple:0.1
+    image: jonimoas/cmssimple:0.2
     container_name: cmssimple
     restart: always
     environment:
-      COUCHBASE_USERNAME:
-      COUCHBASE_PASSWORD:
-      COUCHBASE_HOST:
       HOST:
       NAME:
       ADMIN_PASSWORD:
       PORT: 80
-      DEFAULT_BUCKET:
-      PAGES_BUCKET:
     ports:
       - "80:80"
   #####################################################################################################
