@@ -22,18 +22,15 @@ The ports are hardcoded in the dockerfiles, to be 80 for the cms and 2000 for th
 The document and code editor for pages do not work well together, you may lose content switching from the code to the document editor
 The rest API editor has a specific format for the new calls that need to be made and is as follows for a call that uses momentjs to return the date and a value that has been sent:
 
-{
-"momentTest": [
-"function(a){var moment=require('moment');console.log(moment()); return [a,moment()];}",
-[
-"moment"
-]
-]
-}
+        {"momentTest": ["function(a){var moment=require('moment');console.log(moment()); return [a,moment()];}",["moment"]]}
 
 where each field of the JSON file is the name of the function, the first entry in the array is the code itself in the form of an anonymous function, with one argument for requests that
 only use get parameters and two arguments for requests that use get parameters and post bodies. The second entry in the array includes the names of the npm modules that need to be installed
-and will be installed automatically. The call on the above example can then be called via localhost/plugins/moment/momentTest?test=test, assuming you used 'moment' as the name of the plugin
+and will be installed automatically. The call on the above example can then be called via:
+
+        localhost/plugins/moment/momentTest?test=test
+
+assuming you used 'moment' as the name of the plugin
 
 libraries used:
 
