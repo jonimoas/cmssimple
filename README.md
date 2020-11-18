@@ -15,7 +15,7 @@ the editor can be used to add a logo and a color scheme, and then the user can s
 
 NOTES during deployment.
 
-The ports are hardcoded in the dockerfiles, to be 8023 for the cms and 2000 for the editor, if there is a requirement for change, the dockerfiles need to be changed accordingly and the images rebuilt.
+The ports are hardcoded in the dockerfiles, to be 8023, if there is a requirement for change, the dockerfiles need to be changed accordingly and the images rebuilt.
 
 The document and code editor for pages do not work well together, you may lose content switching from the code to the document editor.
 
