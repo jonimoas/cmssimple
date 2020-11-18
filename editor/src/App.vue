@@ -3,61 +3,97 @@
     <tabs>
       <tab title="Color Schemes">
         <div class="container">
-          <div class="colorContainer" style="grid-area:a1;">
+          <div class="colorContainer" style="grid-area: a1">
             <div class="text">Sidebar Background</div>
             <color-picker
               v-bind:color="sidebarBg"
-              @change="function(input){sidebarBg = input.hex;}"
+              @change="
+                (input) => {
+                  sidebarBg = input.hex;
+                }
+              "
             ></color-picker>
           </div>
-          <div class="colorContainer" style="grid-area:a2;">
+          <div class="colorContainer" style="grid-area: a2">
             <div class="text">Sidebar Text</div>
             <color-picker
               v-bind:color="sidebarTxt"
-              @change="function(input){sidebarTxt = input.hex;}"
+              @change="
+                (input) => {
+                  sidebarTxt = input.hex;
+                }
+              "
             ></color-picker>
           </div>
-          <div class="colorContainer" style="grid-area:a3;">
+          <div class="colorContainer" style="grid-area: a3">
             <div class="text">Sidebar Active Button</div>
             <color-picker
               v-bind:color="sidebarActive"
-              @change="function(input){sidebarActive = input.hex;}"
+              @change="
+                (input) => {
+                  sidebarActive = input.hex;
+                }
+              "
             ></color-picker>
           </div>
-          <div class="colorContainer" style="grid-area:a4;">
+          <div class="colorContainer" style="grid-area: a4">
             <div class="text">Sidebar Active Text</div>
             <color-picker
               v-bind:color="sidebarActiveText"
-              @change="function(input){sidebarActiveText = input.hex;}"
+              @change="
+                (input) => {
+                  sidebarActiveText = input.hex;
+                }
+              "
             ></color-picker>
           </div>
-          <div class="colorContainer" style="grid-area:b1;">
+          <div class="colorContainer" style="grid-area: b1">
             <div class="text">Sidebar Hover Button</div>
             <color-picker
               v-bind:color="sidebarHover"
-              @change="function(input){sidebarHover = input.hex;}"
+              @change="
+                (input) => {
+                  sidebarHover = input.hex;
+                }
+              "
             ></color-picker>
           </div>
-          <div class="colorContainer" style="grid-area:b2;">
+          <div class="colorContainer" style="grid-area: b2">
             <div class="text">Sidebar Hover Text</div>
             <color-picker
               v-bind:color="sidebarHoverText"
-              @change="function(input){sidebarHoverText = input.hex;}"
+              @change="
+                (input) => {
+                  sidebarHoverText = input.hex;
+                }
+              "
             ></color-picker>
           </div>
-          <div class="colorContainer" style="grid-area:b3;">
+          <div class="colorContainer" style="grid-area: b3">
             <div class="text">Background</div>
-            <color-picker v-bind:color="body" @change="function(input){body = input.hex;}"></color-picker>
+            <color-picker
+              v-bind:color="body"
+              @change="
+                (input) => {
+                  body = input.hex;
+                }
+              "
+            ></color-picker>
           </div>
-          <div style="grid-area:c3;">
+          <div style="grid-area: c3">
             <button @click="saveColor">Save</button>
           </div>
         </div>
       </tab>
       <tab title="Page Sort">
-        <draggable v-model="navObj.child" group="people" @start="drag=true" @end="drag=false">
+        <draggable
+          v-model="navObj.child"
+          group="people"
+          @start="drag = true"
+          @end="drag = false"
+        >
           <div v-for="n in navObj.child" :key="n.attr.id">
-            <button>{{n.attr.id}}</button>
+            <div>{{ n.attr.id }}</div>
           </div>
         </draggable>
         <br />
@@ -68,10 +104,8 @@
         <button @click="reset">New</button>
         <select v-model="pageToLoad" @input="loadContent">
           <option disabled value>Select Page To Load</option>
-          <option v-for="n in nav">{{n}}</option>
+          <option v-for="n in nav">{{ n }}</option>
         </select>
-        <input type="text" v-model="menu" placeholder="menu" />
-        <input type="text" v-model="submenu" placeholder="submenu" />
         <input type="text" v-model="name" placeholder="name" />
         <button @click="deleteContent">Delete</button>
         <br />
@@ -83,31 +117,43 @@
         <button @click="reset">New</button>
         <select v-model="pageToLoad" @input="loadContent">
           <option disabled value>Select Page To Load</option>
-          <option v-for="n in nav">{{n}}</option>
+          <option v-for="n in nav">{{ n }}</option>
         </select>
-        <input type="text" v-model="menu" placeholder="menu" />
-        <input type="text" v-model="submenu" placeholder="submenu" />
         <input type="text" v-model="name" placeholder="name" />
         <button @click="deleteContent">Delete</button>
         <br />
-        <prism-editor v-model="content" language="html" :line-numbers="true"></prism-editor>
+        <prism-editor
+          v-model="content"
+          language="html"
+          :line-numbers="true"
+        ></prism-editor>
         <br />
         <button @click="saveContent">Save</button>
       </tab>
       <tab title="REST API Editor">
         <select v-model="pluginToLoad" @input="loadPlugin">
           <option disabled value>Select Plugin To Load</option>
-          <option v-for="p in serverPlugins">{{p}}</option>
+          <option v-for="p in serverPlugins">{{ p }}</option>
         </select>
         <input type="text" v-model="pluginName" placeholder="plugin name" />
+        <input type="text" v-model="callName" placeholder="call name" />
         <br />
-        <prism-editor v-model="RESTContent" language="js" :line-numbers="true"></prism-editor>
+        <prism-editor
+          v-model="RESTContent"
+          language="js"
+          :line-numbers="true"
+        ></prism-editor>
         <br />
         <button @click="saveRest">Save</button>
       </tab>
       <tab title="Logo Selector">
         <div class="file-upload">
-          <input type="file" name="fileToUpload" id="fileToUpload" @change="getLogo" />
+          <input
+            type="file"
+            name="fileToUpload"
+            id="fileToUpload"
+            @change="getLogo"
+          />
         </div>
       </tab>
       <tab title="Raw Code Upload" v-if="false"></tab>
@@ -130,7 +176,7 @@ export default {
     Tab,
     ColorPicker,
     draggable,
-    PrismEditor
+    PrismEditor,
   },
   data() {
     return {
@@ -153,11 +199,12 @@ export default {
       host: "",
       RESTContent: "",
       serverPlugins: [],
-      pluginToLoad: ""
+      pluginToLoad: "",
+      callName: "",
     };
   },
   methods: {
-    loadPlugin: async function() {
+    loadPlugin: async function () {
       let password = prompt("Enter Admin Password");
       setTimeout(async () => {
         console.log(this.pluginToLoad);
@@ -167,12 +214,21 @@ export default {
           )
         ).json();
         console.log(response);
-        this.RESTContent = JSON.stringify(response);
+        this.callName = Object.keys(response)[0];
+        this.RESTContent = response[this.callName][0];
         this.pluginName = this.pluginToLoad;
       });
     },
-    saveRest: function() {
+    saveRest: function () {
       let password = prompt("Enter Admin Password");
+      let body = {};
+      let stringarray = this.RESTContent.split("require(").slice(1);
+      let libs = [];
+      for (const s of stringarray) {
+        libs.push(s.split('"').join("").split("'").join("").split(")")[0]);
+      }
+      body[this.callName] = [this.RESTContent, libs];
+      console.log(JSON.stringify(body));
       fetch(
         this.host +
           "/installPlugin/" +
@@ -182,33 +238,33 @@ export default {
         {
           method: "POST",
           headers: {
-            "Content-type": "application/json; charset=UTF-8"
+            "Content-type": "application/json; charset=UTF-8",
           },
-          body: this.RESTContent
+          body: JSON.stringify(body),
         }
       );
     },
-    reset: function() {
+    reset: function () {
       this.menu = "";
       this.submenu = "";
       this.name = "";
       this.content = "";
       this.pageToLoad = "";
     },
-    saveSort: async function() {
+    saveSort: async function () {
       let password = prompt("Enter Admin Password");
       fetch(this.host + "/navJson?password=" + password, {
         method: "POST",
         headers: {
-          "Content-type": "application/json; charset=UTF-8"
+          "Content-type": "application/json; charset=UTF-8",
         },
-        body: JSON.stringify({ content: this.navObj })
+        body: JSON.stringify({ content: this.navObj }),
       });
     },
-    refresh: function() {
+    refresh: function () {
       this.$forceUpdate();
     },
-    loadContent: async function() {
+    loadContent: async function () {
       setTimeout(async () => {
         let strArr = this.pageToLoad.split("_");
         this.menu = strArr[0];
@@ -227,7 +283,7 @@ export default {
         ).text();
       }, 500);
     },
-    deleteContent: function() {
+    deleteContent: function () {
       let password = prompt("Enter Admin Password");
       fetch(
         this.host +
@@ -241,60 +297,52 @@ export default {
           password
       );
     },
-    saveContent: function() {
+    saveContent: function () {
       let password = prompt("Enter Admin Password");
       fetch(
-        this.host +
-          "/addPage/" +
-          this.menu +
-          "/" +
-          this.submenu +
-          "/" +
-          this.name +
-          "?password=" +
-          password,
+        this.host + "/addPage/cms/pages/" + this.name + "?password=" + password,
         {
           method: "POST",
           headers: {
-            "Content-type": "application/json; charset=UTF-8"
+            "Content-type": "application/json; charset=UTF-8",
           },
-          body: JSON.stringify({ content: this.content })
+          body: JSON.stringify({ content: this.content }),
         }
       );
     },
-    saveColor: function() {
+    saveColor: function () {
       let password = prompt("Enter Admin Password");
       this.colorScheme.stylesheet.rules.find(
-        r => r.selectors != undefined && r.selectors[0] == ".sidebar"
+        (r) => r.selectors != undefined && r.selectors[0] == ".sidebar"
       ).declarations[0].value = this.sidebarBg;
       this.colorScheme.stylesheet.rules.find(
-        r => r.selectors != undefined && r.selectors[0] == ".sidebar a"
+        (r) => r.selectors != undefined && r.selectors[0] == ".sidebar a"
       ).declarations[0].value = this.sidebarTxt;
       this.colorScheme.stylesheet.rules.find(
-        r => r.selectors != undefined && r.selectors[0] == ".sidebar a.active"
+        (r) => r.selectors != undefined && r.selectors[0] == ".sidebar a.active"
       ).declarations[0].value = this.sidebarActive;
       this.colorScheme.stylesheet.rules.find(
-        r => r.selectors != undefined && r.selectors[0] == ".sidebar a.active"
+        (r) => r.selectors != undefined && r.selectors[0] == ".sidebar a.active"
       ).declarations[1].value = this.sidebarActiveText;
       this.colorScheme.stylesheet.rules.find(
-        r =>
+        (r) =>
           r.selectors != undefined &&
           r.selectors[0] == ".sidebar a:hover:not(.active)"
       ).declarations[0].value = this.sidebarHover;
       this.colorScheme.stylesheet.rules.find(
-        r =>
+        (r) =>
           r.selectors != undefined &&
           r.selectors[0] == ".sidebar a:hover:not(.active)"
       ).declarations[1].value = this.sidebarHoverText;
       this.colorScheme.stylesheet.rules.find(
-        r => r.selectors != undefined && r.selectors[0] == "body"
+        (r) => r.selectors != undefined && r.selectors[0] == "body"
       ).declarations[0].value = this.body;
       fetch(this.host + "/colorScheme" + "?password=" + password, {
         method: "POST",
         headers: {
-          "Content-type": "application/json; charset=UTF-8"
+          "Content-type": "application/json; charset=UTF-8",
         },
-        body: JSON.stringify({ content: this.colorScheme })
+        body: JSON.stringify({ content: this.colorScheme }),
       });
     },
     getLogo(input) {
@@ -307,56 +355,72 @@ export default {
         fetch(this.host + "/logo" + "?password=" + password, {
           method: "POST",
           headers: {
-            "Content-type": "application/json; charset=UTF-8"
+            "Content-type": "application/json; charset=UTF-8",
           },
           body: JSON.stringify({
-            content: dataURL
-          })
+            content: dataURL,
+          }),
         });
       };
       reader.abort();
       reader.readAsDataURL(input.target.files[0]);
-    }
+    },
+
+    getHost: async function () {
+      if (window.sessionStorage.getItem("cmshost")) {
+        this.host = window.sessionStorage.getItem("cmshost");
+      } else {
+        this.host = prompt("Enter Site Host");
+        window.sessionStorage.setItem("cmshost", this.host);
+      }
+    },
   },
   async mounted() {
+    await this.getHost();
     try {
-      this.host = (await (await fetch("config")).json()).api;
-    } catch (ex) {
-      this.host = "http://localhost:80";
+      this.colorScheme = await (await fetch(this.host + "/colorScheme")).json();
+    } catch (e) {
+      window.alert(e);
+      window.sessionStorage.clear();
+      await this.getHost();
+      return;
     }
-    this.navObj = await (await fetch(this.host + "/navJson")).json();
-    this.nav = await (await fetch(this.host + "/navList")).json();
-    this.colorScheme = await (await fetch(this.host + "/colorScheme")).json();
+    try {
+      this.navObj = await (await fetch(this.host + "/navJson")).json();
+      this.nav = await (await fetch(this.host + "/navList")).json();
+    } catch (e) {
+      window.alert("Site is Fresh!");
+    }
     console.log(this.colorScheme);
     this.sidebarBg = this.colorScheme.stylesheet.rules.find(
-      r => r.selectors != undefined && r.selectors[0] == ".sidebar"
+      (r) => r.selectors != undefined && r.selectors[0] == ".sidebar"
     ).declarations[0].value;
     this.sidebarTxt = this.colorScheme.stylesheet.rules.find(
-      r => r.selectors != undefined && r.selectors[0] == ".sidebar a"
+      (r) => r.selectors != undefined && r.selectors[0] == ".sidebar a"
     ).declarations[0].value;
     this.sidebarActive = this.colorScheme.stylesheet.rules.find(
-      r => r.selectors != undefined && r.selectors[0] == ".sidebar a.active"
+      (r) => r.selectors != undefined && r.selectors[0] == ".sidebar a.active"
     ).declarations[0].value;
     this.sidebarActiveText = this.colorScheme.stylesheet.rules.find(
-      r => r.selectors != undefined && r.selectors[0] == ".sidebar a.active"
+      (r) => r.selectors != undefined && r.selectors[0] == ".sidebar a.active"
     ).declarations[1].value;
     this.sidebarHover = this.colorScheme.stylesheet.rules.find(
-      r =>
+      (r) =>
         r.selectors != undefined &&
         r.selectors[0] == ".sidebar a:hover:not(.active)"
     ).declarations[0].value;
     this.sidebarHoverText = this.colorScheme.stylesheet.rules.find(
-      r =>
+      (r) =>
         r.selectors != undefined &&
         r.selectors[0] == ".sidebar a:hover:not(.active)"
     ).declarations[1].value;
     this.body = this.colorScheme.stylesheet.rules.find(
-      r => r.selectors != undefined && r.selectors[0] == "body"
+      (r) => r.selectors != undefined && r.selectors[0] == "body"
     ).declarations[0].value;
     this.serverPlugins = await (
       await fetch(this.host + "/getPluginList")
     ).json();
-  }
+  },
 };
 </script>
 

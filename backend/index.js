@@ -15,8 +15,8 @@ var html2json = require("html2json").html2json;
 var json2html = require("html2json").json2html;
 var index = require("./index.json");
 var npm = require("npm");
-//inits
 
+//inits
 const adapter = new FileSync("db.json");
 const db = low(adapter);
 db.defaults({
@@ -25,8 +25,8 @@ db.defaults({
   main: [
     { name: "index", content: index },
     { name: "nav", content: undefined },
-    { name: "logo", content: undefined }
-  ]
+    { name: "logo", content: undefined },
+  ],
 }).write();
 const app = express();
 const options = {
@@ -35,35 +35,27 @@ const options = {
     "X-Requested-With",
     "Content-Type",
     "Accept",
-    "X-Access-Token"
+    "X-Access-Token",
   ],
   credentials: true,
   methods: "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE",
   origin: "*",
-  preflightContinue: false
+  preflightContinue: false,
 };
 app.use(cors(options));
 app.use(bodyParser.json());
-var myIP = HOST;
+var myIP = HOST + ":" + port;
 var siteName = NAME;
 var password = ADMIN_PASSWORD;
 app.get("/getPluginList", (req, res) => {
-  res.send(
-    db
-      .get("plugins")
-      .map("name")
-      .value()
-  );
+  res.send(db.get("plugins").map("name").value());
 });
 app.get("/plugin/:name", (req, res) => {
   if (req.query.password != password) {
     res.send(400);
     return;
   }
-  let response = db
-    .get("plugins")
-    .find({ name: req.params.name })
-    .value();
+  let response = db.get("plugins").find({ name: req.params.name }).value();
   res.send(response.content);
 });
 app.post("/updateMain", (req, res) => {
@@ -71,9 +63,7 @@ app.post("/updateMain", (req, res) => {
     res.send(400);
     return;
   }
-  db.get("main")
-    .push({ name: "index", content: req.body.content })
-    .write();
+  db.get("main").push({ name: "index", content: req.body.content }).write();
   res.send(200);
 });
 app.get("/init", (req, res) => {
@@ -81,9 +71,7 @@ app.get("/init", (req, res) => {
     res.send(400);
     return;
   }
-  db.get("main")
-    .push({ name: "index", content: index })
-    .write();
+  db.get("main").push({ name: "index", content: index }).write();
   res.send(200);
 });
 app.get("/deletePage/:menu/:submenu/:name", (req, res) => {
@@ -93,22 +81,15 @@ app.get("/deletePage/:menu/:submenu/:name", (req, res) => {
   }
   db.get("pages")
     .remove({
-      name: req.params.menu + "_" + req.params.submenu + "_" + req.params.name
+      name: req.params.menu + "_" + req.params.submenu + "_" + req.params.name,
     })
     .write();
-  navigation = db
-    .get("main")
-    .find({ name: "nav" })
-    .value();
+  navigation = db.get("main").find({ name: "nav" }).value();
   navigation.child = navigation.child.filter(
-    r => r.child[0].text != req.params.name
+    (r) => r.child[0].text != req.params.name
   );
-  db.get("main")
-    .remove({ name: "nav" })
-    .write();
-  db.get("main")
-    .push({ name: "nav", content: navigation })
-    .write();
+  db.get("main").remove({ name: "nav" }).write();
+  db.get("main").push({ name: "nav", content: navigation }).write();
   res.send(200);
 });
 app.post("/addPage/:menu/:submenu/:name", (req, res) => {
@@ -118,19 +99,16 @@ app.post("/addPage/:menu/:submenu/:name", (req, res) => {
   }
   db.get("pages")
     .remove({
-      name: req.params.menu + "_" + req.params.submenu + "_" + req.params.name
+      name: req.params.menu + "_" + req.params.submenu + "_" + req.params.name,
     })
     .write();
   db.get("pages")
     .push({
       name: req.params.menu + "_" + req.params.submenu + "_" + req.params.name,
-      content: html2json(req.body.content)
+      content: html2json(req.body.content),
     })
     .write();
-  let navigation = db
-    .get("main")
-    .find({ name: "nav" })
-    .value();
+  let navigation = db.get("main").find({ name: "nav" }).value();
   console.log(navigation);
   if (navigation.content == undefined) {
     navigation.content = { node: "root", child: [] };
@@ -146,18 +124,18 @@ app.post("/addPage/:menu/:submenu/:name", (req, res) => {
           "_" +
           req.params.submenu +
           "_" +
-          req.params.name
+          req.params.name,
       },
       child: [
         {
           node: "text",
-          text: req.params.name
-        }
-      ]
+          text: req.params.name,
+        },
+      ],
     });
   } else {
     navigation.content.child = navigation.content.child.filter(
-      r => r.child[0].text != req.params.name
+      (r) => r.child[0].text != req.params.name
     );
     navigation.content.child.push({
       node: "element",
@@ -171,24 +149,19 @@ app.post("/addPage/:menu/:submenu/:name", (req, res) => {
           "_" +
           req.params.submenu +
           "_" +
-          req.params.name
+          req.params.name,
       },
       child: [
         {
           node: "text",
-          text: req.params.name
-        }
-      ]
+          text: req.params.name,
+        },
+      ],
     });
   }
-  db.get("main")
-    .remove({ name: "nav" })
-    .write();
+  db.get("main").remove({ name: "nav" }).write();
   console.log(
-    db
-      .get("main")
-      .push({ name: "nav", content: navigation.content })
-      .write()
+    db.get("main").push({ name: "nav", content: navigation.content }).write()
   );
   res.send(200);
 });
@@ -199,17 +172,14 @@ app.get("/getPage/:menu/:submenu/:name", (req, res) => {
         .get("pages")
         .find({
           name:
-            req.params.menu + "_" + req.params.submenu + "_" + req.params.name
+            req.params.menu + "_" + req.params.submenu + "_" + req.params.name,
         })
         .value().content
     )
   );
 });
 app.get("/navigation", (req, res) => {
-  let navigation = db
-    .get("main")
-    .find({ name: "nav" })
-    .value();
+  let navigation = db.get("main").find({ name: "nav" }).value();
   if (navigation.content == undefined) {
     res.send("");
   } else {
@@ -217,30 +187,19 @@ app.get("/navigation", (req, res) => {
   }
 });
 app.get("/navJson", (req, res) => {
-  res.send(
-    db
-      .get("main")
-      .find({ name: "nav" })
-      .value().content
-  );
+  res.send(db.get("main").find({ name: "nav" }).value().content);
 });
 app.post("/navJson", (req, res) => {
   if (req.query.password != password) {
     res.send(400);
     return;
   }
-  db.get("main")
-    .remove({ name: "nav" })
-    .write();
-  db.get("main")
-    .push({ name: "nav", content: req.body.content })
-    .write();
+  db.get("main").remove({ name: "nav" }).write();
+  db.get("main").push({ name: "nav", content: req.body.content }).write();
+  res.send(200);
 });
 app.get("/logo", (req, res) => {
-  let logo = db
-    .get("main")
-    .find({ name: "logo" })
-    .value();
+  let logo = db.get("main").find({ name: "logo" }).value();
   if (logo.content == undefined) {
     res.send("");
   } else {
@@ -252,9 +211,7 @@ app.post("/logo", (req, res) => {
     res.send(400);
     return;
   }
-  db.get("main")
-    .remove({ name: "logo" })
-    .write();
+  db.get("main").remove({ name: "logo" }).write();
   db.get("main")
     .push({
       name: "logo",
@@ -269,23 +226,20 @@ app.post("/logo", (req, res) => {
                 node: "element",
                 tag: "img",
                 attr: {
-                  src: req.body.content
-                }
-              }
-            ]
-          }
-        ]
-      }
+                  src: req.body.content,
+                },
+              },
+            ],
+          },
+        ],
+      },
     })
     .write();
   res.send(200);
 });
 app.get("/navList", (req, res) => {
   let respArray = [];
-  nav = db
-    .get("main")
-    .find({ name: "nav" })
-    .value();
+  nav = db.get("main").find({ name: "nav" }).value();
   if (nav == null) {
     respArray = [];
   } else {
@@ -296,33 +250,20 @@ app.get("/navList", (req, res) => {
   res.send(respArray);
 });
 app.get("/", (req, res) => {
-  console.log(
-    db
-      .get("main")
-      .find({ name: "index" })
-      .value()
-  );
+  console.log(db.get("main").find({ name: "index" }).value());
   res.send(
-    json2html(
-      db
-        .get("main")
-        .find({ name: "index" })
-        .value().content
-    )
+    json2html(db.get("main").find({ name: "index" }).value().content)
       .split("http://localhost:80")
       .join(myIP)
   );
 });
 app.get("/colorScheme", (req, res) => {
-  let result = db
-    .get("main")
-    .find({ name: "index" })
-    .value().content;
+  let result = db.get("main").find({ name: "index" }).value().content;
   res.send(
     css.parse(
       result.child[0].child
-        .find(r => r.tag == "head")
-        .child.find(r => r.tag == "style" && r.attr.id == "colors").child[0]
+        .find((r) => r.tag == "head")
+        .child.find((r) => r.tag == "style" && r.attr.id == "colors").child[0]
         .text
     )
   );
@@ -332,31 +273,22 @@ app.post("/colorScheme", (req, res) => {
     res.send(400);
     return;
   }
-  let result = db
-    .get("main")
-    .find({ name: "index" })
-    .value().content;
+  let result = db.get("main").find({ name: "index" }).value().content;
   result.child[0].child
-    .find(r => r.tag == "head")
+    .find((r) => r.tag == "head")
     .child.find(
-      r => r.tag == "style" && r.attr.id == "colors"
+      (r) => r.tag == "style" && r.attr.id == "colors"
     ).child[0].text = css.stringify(req.body.content);
-  db.get("main")
-    .remove({ name: "index" })
-    .write();
-  db.get("main")
-    .push({ name: "index", content: result })
-    .write();
+  db.get("main").remove({ name: "index" }).write();
+  db.get("main").push({ name: "index", content: result }).write();
   res.send(200);
 });
 app.get("/siteName", (req, res) => {
   res.send(siteName);
 });
 app.get("/plugins/:name/:call", async (req, res) => {
-  let result = db
-    .get("plugins")
-    .find({ name: req.params.name })
-    .value().content;
+  let result = db.get("plugins").find({ name: req.params.name }).value()
+    .content;
   var func = new Function(
     "exports",
     "require",
@@ -369,10 +301,8 @@ app.get("/plugins/:name/:call", async (req, res) => {
   res.send(response);
 });
 app.post("/plugins/:name/:call", async (req, res) => {
-  let result = db
-    .get("plugins")
-    .find({ name: req.params.name })
-    .value().content;
+  let result = db.get("plugins").find({ name: req.params.name }).value()
+    .content;
   var func = new Function(
     "exports",
     "require",
@@ -390,17 +320,12 @@ app.post("/installPlugin/:name", (req, res) => {
     return;
   }
   console.log(req.body);
-  db.get("plugins")
-    .remove({ name: req.params.name })
-    .write();
-  db.get("plugins")
-    .push({ name: req.params.name, content: req.body })
-    .write();
+  db.get("plugins").remove({ name: req.params.name }).write();
+  db.get("plugins").push({ name: req.params.name, content: req.body }).write();
   console.log(req.body);
-
   let pluginList = req.body[Object.keys(req.body)[0]][1];
-  npm.load(function(err) {
-    npm.commands.install(pluginList, function(er, data) {
+  npm.load(function (err) {
+    npm.commands.install(pluginList, function (er, data) {
       res.send(200);
     });
   });
@@ -410,13 +335,10 @@ app.get("/reInstallDeps/:name", (req, res) => {
     res.send(400);
     return;
   }
-  result = db
-    .get("plugins")
-    .find({ name: req.params.name })
-    .value().content;
+  result = db.get("plugins").find({ name: req.params.name }).value().content;
   let pluginList = result[1];
-  npm.load(function(err) {
-    npm.commands.install(pluginList, function(er, data) {
+  npm.load(function (err) {
+    npm.commands.install(pluginList, function (er, data) {
       res.send(200);
     });
   });
@@ -426,10 +348,7 @@ app.get("/removePlugin/:name", (req, res) => {
     res.send(400);
     return;
   }
-  db.get("plugins")
-    .remove({ name: req.params.name })
-    .write();
+  db.get("plugins").remove({ name: req.params.name }).write();
   res.send(200);
 });
-console.log(index);
 app.listen(port, () => console.log(`CMSSimple online on ${port}!`));

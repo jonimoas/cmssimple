@@ -3,15 +3,6 @@
 version: "2"
 services:
   #####################################################################################################
-  editor:
-    image: jonimoas/cmssimple_editor:0.2
-    container_name: cmssimple_editor
-    restart: always
-    ports:
-      - "2000:2000"
-    environment:
-      EDITOR_PORT: 2000
-      HOST:
   cms:
     image: jonimoas/cmssimple:0.2
     container_name: cmssimple
@@ -20,7 +11,7 @@ services:
       HOST:
       NAME:
       ADMIN_PASSWORD:
-      PORT: 80
+      PORT: 8023
     ports:
-      - "80:80"
+      - "8023:80"
   #####################################################################################################
