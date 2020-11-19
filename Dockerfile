@@ -8,4 +8,4 @@ RUN npm install
 
 EXPOSE 8023
 
-CMD /home/node/cmssimple/start.sh
+CMD while true; do node index; sleep 2; done

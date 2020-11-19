@@ -1,16 +1,27 @@
 {
-  "name": "editor",
-  "version": "0.1.0",
-  "private": true,
+  "name": "moapress",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
   "scripts": {
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build"
+    "build": "vue-cli-service build",
+    "start": "node index"
   },
+  "author": "",
+  "license": "ISC",
   "dependencies": {
     "core-js": "^3.4.3",
+    "cors": "^2.8.5",
+    "css": "^3.0.0",
+    "express": "^4.17.1",
+    "html2json": "^1.0.2",
+    "lowdb": "^1.0.0",
+    "npm": "^7.0.12",
     "prismjs": "^1.21.0",
     "v-color": "^1.1.2",
     "vue": "^2.6.10",
+    "vue-cookies": "^1.7.4",
     "vue-prism-editor": "^0.3.0",
     "vue-slim-tabs": "^0.4.0",
     "vue2-editor": "^2.10.2",

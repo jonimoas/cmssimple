@@ -1,0 +1,10 @@
+node_modules
+.git
+.gitignore
+demo.gif
+docker-compose-example.yml
+docker-compose.yml
+package-lock.json
+start.bat
+start.sh
+db.json

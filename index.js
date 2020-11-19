@@ -2,7 +2,8 @@
 var HOST = process.env.HOST;
 var NAME = process.env.NAME;
 var ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-var port = process.env.PORT;
+var port = process.env.MAIN_PORT;
+var ext_port = process.env.NEW_PORT;
 
 //libs
 const low = require("lowdb");
@@ -15,6 +16,7 @@ var html2json = require("html2json").html2json;
 var json2html = require("html2json").json2html;
 var index = require("./index.json");
 var npm = require("npm");
+var exec = require("child_process").exec;
 
 //inits
 const adapter = new FileSync("db.json");
@@ -47,6 +49,10 @@ app.use(bodyParser.json());
 var myIP = HOST + ":" + port;
 var siteName = NAME;
 var password = ADMIN_PASSWORD;
+child = exec("npm run build").stderr.pipe(process.stderr);
+app.use("/editor", express.static("dist"));
+app.use("/js", express.static("dist/js"));
+app.use("/css", express.static("dist/css"));
 app.get("/getPluginList", (req, res) => {
   res.send(db.get("plugins").map("name").value());
 });
@@ -251,6 +257,7 @@ app.get("/navList", (req, res) => {
 });
 app.get("/", (req, res) => {
   console.log(db.get("main").find({ name: "index" }).value());
+  res.cookie("cmshost", HOST + ":" + ext_port);
   res.send(
     json2html(db.get("main").find({ name: "index" }).value().content)
       .split("http://localhost:80")

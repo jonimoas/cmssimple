@@ -4,14 +4,17 @@ cmssimple is a fully dockerized cms for text based sites, using lowdb as a datab
 
 In order to run the application, you can either use the example docker-compose file, or set the variables manually.
 
-CMS variables:
+Variables:
 
       HOST: the location of the site
       NAME: the name of the site
       ADMIN_PASSWORD: the password for making changes using the editor
-      PORT: the port that the site will be hosted (hardcoded to 8023 in dockerfile)
+      MAIN_PORT: the port that the site will be hosted (hardcoded to 8023 in dockerfile)
+      NEW_PORT: the port that is seen from the outside, if forwarding has been applied. Else the same as main.
 
-the editor can be used to add a logo and a color scheme, and then the user can start adding and sorting pages at will, also adding new rest api calls, using the text editor and code editors.
+the editor can be acessed on the /editor endpoint of your host
+
+the editor can then be used to add a logo and a color scheme, and then the user can start adding and sorting pages at will, also adding new rest api calls, using the text editor and code editors.
 
 NOTES during deployment.
 
@@ -31,15 +34,13 @@ assuming you used 'moment' as the name of the plugin
 
 libraries used:
 
-    editor:
         https://github.com/v-comp/v-color
         https://github.com/vuejs/vue
         https://github.com/egoist/vue-slim-tabs
         https://github.com/davidroyer/vue2-editor
         https://github.com/SortableJS/Vue.Draggable
         https://github.com/koca/vue-prism-editor
-
-    cms:
+        https://github.com/cmp-cc/vue-cookies
         https://github.com/expressjs/cors
         https://github.com/expressjs/express
         https://github.com/reworkcss/css

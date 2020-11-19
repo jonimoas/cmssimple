@@ -13,6 +13,7 @@
                 }
               "
             ></color-picker>
+            
           </div>
           <div class="colorContainer" style="grid-area: a2">
             <div class="text">Sidebar Text</div>
@@ -365,13 +366,12 @@ export default {
       reader.abort();
       reader.readAsDataURL(input.target.files[0]);
     },
-
     getHost: async function () {
-      if (window.sessionStorage.getItem("cmshost")) {
-        this.host = window.sessionStorage.getItem("cmshost");
+      if (this.$cookies.get("cmshost")) {
+        this.host = this.$cookies.get("cmshost");
       } else {
         this.host = prompt("Enter Site Host");
-        window.sessionStorage.setItem("cmshost", this.host);
+        this.$cookies.set("cmshost",this.host);
       }
     },
   },
@@ -381,7 +381,7 @@ export default {
       this.colorScheme = await (await fetch(this.host + "/colorScheme")).json();
     } catch (e) {
       window.alert(e);
-      window.sessionStorage.clear();
+      this.$cookies.remove("cmshost")
       await this.getHost();
       return;
     }

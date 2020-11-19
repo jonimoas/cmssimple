@@ -105,3 +105,5 @@ dist
 backend/db.json
 backend/package-lock.json
 editor/package-lock.json
+db.json
+package-lock.json
