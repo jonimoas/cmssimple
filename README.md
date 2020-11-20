@@ -14,7 +14,7 @@ Variables:
 
 the editor can be acessed on the /editor endpoint of your host
 
-the editor can then be used to add a logo and a color scheme, and then the user can start adding and sorting pages at will, also adding new rest api calls, using the text editor and code editors.
+the editor can then be used to add a logo and a color scheme, and then the user can start adding and sorting pages at will, also adding new rest api calls, using the text editor and code editors. The user can also backup and restore the database file. 
 
 NOTES during deployment.
 
@@ -22,7 +22,7 @@ The ports are hardcoded in the dockerfiles, to be 8023, if there is a requiremen
 
 The document and code editor for pages do not work well together, you may lose content switching from the code to the document editor.
 
-The rest API editor has a specific format for the new calls that need to be made and is as follows for a call that uses momentjs to return the date and a value that has been sent:
+The rest API editor simply takes a plain javascript function as follows for a call that uses momentjs to return the date and a value that has been sent:
 
         function(a){var moment=require('moment');console.log(moment()); return [a,moment()];}
 
@@ -43,6 +43,7 @@ libraries used:
         https://github.com/cmp-cc/vue-cookies
         https://github.com/expressjs/cors
         https://github.com/expressjs/express
+        https://github.com/expressjs/multer
         https://github.com/reworkcss/css
         https://github.com/Jxck/html2json
         https://github.com/typicode/lowdb

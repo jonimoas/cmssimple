@@ -6,5 +6,6 @@ docker-compose-example.yml
 docker-compose.yml
 package-lock.json
 start.bat
-start.sh
+start_template.bat
+start_template.sh
 db.json

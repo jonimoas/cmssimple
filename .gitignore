@@ -107,3 +107,4 @@ backend/package-lock.json
 editor/package-lock.json
 db.json
 package-lock.json
+start.bat

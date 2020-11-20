@@ -157,7 +157,19 @@
           />
         </div>
       </tab>
-      <tab title="Raw Code Upload" v-if="false"></tab>
+      <tab title="Backup/Restore">
+        <div class="file-upload">
+          <input
+            type="file"
+            name="fileToUpload"
+            id="fileToRestore"
+            @change="restore"
+          />
+        </div>
+        <div>
+          <button @click="backup">Backup</button>
+        </div>
+      </tab>
     </tabs>
   </div>
 </template>
@@ -205,6 +217,35 @@ export default {
     };
   },
   methods: {
+    backup:async function(){
+      let password = prompt("Enter Admin Password");
+      let response = await fetch (this.host + "/backup?password=" + password);
+      response.blob().then((blob) => {
+        var url = window.URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = "db.json";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      });
+    },
+    restore:async function(input){
+      let password = prompt("Enter Admin Password");
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const dataURL = reader.result;
+        console.log(dataURL);
+        let password = prompt("Enter Admin Password");
+        let db = document.getElementById("fileToRestore").files[0];
+        let formData = new FormData();
+        formData.append("db", db);
+        await fetch(this.host + "/restore?password=" + password,
+          {method: "POST", body: formData});
+      };
+      reader.abort();
+      reader.readAsDataURL(input.target.files[0]);
+    },
     loadPlugin: async function () {
       let password = prompt("Enter Admin Password");
       setTimeout(async () => {

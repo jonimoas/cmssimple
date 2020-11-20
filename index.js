@@ -17,19 +17,12 @@ var json2html = require("html2json").json2html;
 var index = require("./index.json");
 var npm = require("npm");
 var exec = require("child_process").exec;
+const multer = require("multer");
+var fs = require("fs");
 
 //inits
-const adapter = new FileSync("db.json");
-const db = low(adapter);
-db.defaults({
-  pages: [],
-  plugins: [],
-  main: [
-    { name: "index", content: index },
-    { name: "nav", content: undefined },
-    { name: "logo", content: undefined },
-  ],
-}).write();
+var db;
+initDB();
 const app = express();
 const options = {
   allowedHeaders: [
@@ -46,45 +39,79 @@ const options = {
 };
 app.use(cors(options));
 app.use(bodyParser.json());
-var myIP = HOST + ":" + port;
+const upload = multer({ dest: "./" });
+var myIP = HOST + ":" + ext_port;
 var siteName = NAME;
 var password = ADMIN_PASSWORD;
 child = exec("npm run build").stderr.pipe(process.stderr);
+
+//editor endpoints
 app.use("/editor", express.static("dist"));
 app.use("/js", express.static("dist/js"));
 app.use("/css", express.static("dist/css"));
+
+//plugin endpoints
 app.get("/getPluginList", (req, res) => {
   res.send(db.get("plugins").map("name").value());
 });
-app.get("/plugin/:name", (req, res) => {
-  if (req.query.password != password) {
-    res.send(400);
-    return;
-  }
+app.get("/plugin/:name", auth, (req, res) => {
   let response = db.get("plugins").find({ name: req.params.name }).value();
   res.send(response.content);
 });
-app.post("/updateMain", (req, res) => {
-  if (req.query.password != password) {
-    res.send(400);
-    return;
-  }
-  db.get("main").push({ name: "index", content: req.body.content }).write();
+app.get("/plugins/:name/:call", async (req, res) => {
+  let result = db.get("plugins").find({ name: req.params.name }).value()
+    .content;
+  var func = new Function(
+    "exports",
+    "require",
+    "module",
+    "__filename",
+    "__dirname",
+    "return " + result[req.params.call][0]
+  )(exports, require, module, __filename, __dirname);
+  let response = await func(req.query);
+  res.send(response);
+});
+app.post("/plugins/:name/:call", async (req, res) => {
+  let result = db.get("plugins").find({ name: req.params.name }).value()
+    .content;
+  var func = new Function(
+    "exports",
+    "require",
+    "module",
+    "__filename",
+    "__dirname",
+    "return " + result[req.params.call][0]
+  )(exports, require, module, __filename, __dirname);
+  let response = await func(req.query, req.body);
+  res.send(response);
+});
+app.post("/installPlugin/:name", auth, (req, res) => {
+  db.get("plugins").remove({ name: req.params.name }).write();
+  db.get("plugins").push({ name: req.params.name, content: req.body }).write();
+  let pluginList = req.body[Object.keys(req.body)[0]][1];
+  npm.load(function (err) {
+    npm.commands.install(pluginList, function (er, data) {
+      res.send(200);
+    });
+  });
+});
+app.get("/reInstallDeps/:name", auth, (req, res) => {
+  result = db.get("plugins").find({ name: req.params.name }).value().content;
+  let pluginList = result[1];
+  npm.load(function (err) {
+    npm.commands.install(pluginList, function (er, data) {
+      res.send(200);
+    });
+  });
+});
+app.get("/removePlugin/:name", auth, (req, res) => {
+  db.get("plugins").remove({ name: req.params.name }).write();
   res.send(200);
 });
-app.get("/init", (req, res) => {
-  if (req.query.password != password) {
-    res.send(400);
-    return;
-  }
-  db.get("main").push({ name: "index", content: index }).write();
-  res.send(200);
-});
-app.get("/deletePage/:menu/:submenu/:name", (req, res) => {
-  if (req.query.password != password) {
-    res.send(400);
-    return;
-  }
+
+//page endpoints
+app.get("/deletePage/:menu/:submenu/:name", auth, (req, res) => {
   db.get("pages")
     .remove({
       name: req.params.menu + "_" + req.params.submenu + "_" + req.params.name,
@@ -98,11 +125,7 @@ app.get("/deletePage/:menu/:submenu/:name", (req, res) => {
   db.get("main").push({ name: "nav", content: navigation }).write();
   res.send(200);
 });
-app.post("/addPage/:menu/:submenu/:name", (req, res) => {
-  if (req.query.password != password) {
-    res.send(400);
-    return;
-  }
+app.post("/addPage/:menu/:submenu/:name", auth, (req, res) => {
   db.get("pages")
     .remove({
       name: req.params.menu + "_" + req.params.submenu + "_" + req.params.name,
@@ -184,6 +207,20 @@ app.get("/getPage/:menu/:submenu/:name", (req, res) => {
     )
   );
 });
+
+//navigation endpoints
+app.get("/navList", (req, res) => {
+  let respArray = [];
+  nav = db.get("main").find({ name: "nav" }).value();
+  if (nav == null) {
+    respArray = [];
+  } else {
+    for (const n of nav.content.child) {
+      respArray.push(n.attr.id);
+    }
+  }
+  res.send(respArray);
+});
 app.get("/navigation", (req, res) => {
   let navigation = db.get("main").find({ name: "nav" }).value();
   if (navigation.content == undefined) {
@@ -195,15 +232,13 @@ app.get("/navigation", (req, res) => {
 app.get("/navJson", (req, res) => {
   res.send(db.get("main").find({ name: "nav" }).value().content);
 });
-app.post("/navJson", (req, res) => {
-  if (req.query.password != password) {
-    res.send(400);
-    return;
-  }
+app.post("/navJson", auth, (req, res) => {
   db.get("main").remove({ name: "nav" }).write();
   db.get("main").push({ name: "nav", content: req.body.content }).write();
   res.send(200);
 });
+
+//logo endpoints
 app.get("/logo", (req, res) => {
   let logo = db.get("main").find({ name: "logo" }).value();
   if (logo.content == undefined) {
@@ -212,11 +247,7 @@ app.get("/logo", (req, res) => {
     res.send(json2html(logo.content));
   }
 });
-app.post("/logo", (req, res) => {
-  if (req.query.password != password) {
-    res.send(400);
-    return;
-  }
+app.post("/logo", auth, (req, res) => {
   db.get("main").remove({ name: "logo" }).write();
   db.get("main")
     .push({
@@ -243,27 +274,8 @@ app.post("/logo", (req, res) => {
     .write();
   res.send(200);
 });
-app.get("/navList", (req, res) => {
-  let respArray = [];
-  nav = db.get("main").find({ name: "nav" }).value();
-  if (nav == null) {
-    respArray = [];
-  } else {
-    for (const n of nav.content.child) {
-      respArray.push(n.attr.id);
-    }
-  }
-  res.send(respArray);
-});
-app.get("/", (req, res) => {
-  console.log(db.get("main").find({ name: "index" }).value());
-  res.cookie("cmshost", HOST + ":" + ext_port);
-  res.send(
-    json2html(db.get("main").find({ name: "index" }).value().content)
-      .split("http://localhost:80")
-      .join(myIP)
-  );
-});
+
+//color scheme endpoints
 app.get("/colorScheme", (req, res) => {
   let result = db.get("main").find({ name: "index" }).value().content;
   res.send(
@@ -275,11 +287,7 @@ app.get("/colorScheme", (req, res) => {
     )
   );
 });
-app.post("/colorScheme", (req, res) => {
-  if (req.query.password != password) {
-    res.send(400);
-    return;
-  }
+app.post("/colorScheme", auth, (req, res) => {
   let result = db.get("main").find({ name: "index" }).value().content;
   result.child[0].child
     .find((r) => r.tag == "head")
@@ -290,72 +298,61 @@ app.post("/colorScheme", (req, res) => {
   db.get("main").push({ name: "index", content: result }).write();
   res.send(200);
 });
+
+//backup endpoints
+app.get("/backup", auth, (req, res) => {
+  res.download("./db.json");
+});
+app.post("/restore", auth, upload.single("db"), (req, res) => {
+  fs.unlinkSync("./db.json");
+  fs.renameSync("./" + req.file.filename, "./db.json");
+  initDB();
+  res.send(200);
+});
+
+//main endpoints
+app.post("/updateMain", auth, (req, res) => {
+  db.get("main").push({ name: "index", content: req.body.content }).write();
+  res.send(200);
+});
+app.get("/init", auth, (req, res) => {
+  db.get("main").push({ name: "index", content: index }).write();
+  res.send(200);
+});
+app.get("/", (req, res) => {
+  console.log(db.get("main").find({ name: "index" }).value());
+  res.cookie("cmshost", HOST + ":" + ext_port);
+  res.send(
+    json2html(db.get("main").find({ name: "index" }).value().content)
+      .split("http://localhost:80")
+      .join(myIP)
+  );
+});
 app.get("/siteName", (req, res) => {
   res.send(siteName);
 });
-app.get("/plugins/:name/:call", async (req, res) => {
-  let result = db.get("plugins").find({ name: req.params.name }).value()
-    .content;
-  var func = new Function(
-    "exports",
-    "require",
-    "module",
-    "__filename",
-    "__dirname",
-    "return " + result[req.params.call][0]
-  )(exports, require, module, __filename, __dirname);
-  let response = await func(req.query);
-  res.send(response);
-});
-app.post("/plugins/:name/:call", async (req, res) => {
-  let result = db.get("plugins").find({ name: req.params.name }).value()
-    .content;
-  var func = new Function(
-    "exports",
-    "require",
-    "module",
-    "__filename",
-    "__dirname",
-    "return " + result[req.params.call][0]
-  )(exports, require, module, __filename, __dirname);
-  let response = await func(req.query, req.body);
-  res.send(response);
-});
-app.post("/installPlugin/:name", (req, res) => {
-  if (req.query.password != password) {
-    res.send(400);
-    return;
-  }
-  console.log(req.body);
-  db.get("plugins").remove({ name: req.params.name }).write();
-  db.get("plugins").push({ name: req.params.name, content: req.body }).write();
-  console.log(req.body);
-  let pluginList = req.body[Object.keys(req.body)[0]][1];
-  npm.load(function (err) {
-    npm.commands.install(pluginList, function (er, data) {
-      res.send(200);
-    });
-  });
-});
-app.get("/reInstallDeps/:name", (req, res) => {
-  if (req.query.password != password) {
-    res.send(400);
-    return;
-  }
-  result = db.get("plugins").find({ name: req.params.name }).value().content;
-  let pluginList = result[1];
-  npm.load(function (err) {
-    npm.commands.install(pluginList, function (er, data) {
-      res.send(200);
-    });
-  });
-});
-app.get("/removePlugin/:name", (req, res) => {
-  if (req.query.password != password) {
-    res.send(400);
-    return;
-  }
-  db.get("plugins").remove({ name: req.params.name }).write();
-  res.send(200);
-});
+
 app.listen(port, () => console.log(`CMSSimple online on ${port}!`));
+
+//helper functions
+function initDB() {
+  const adapter = new FileSync("db.json");
+  db = low(adapter);
+  db.defaults({
+    pages: [],
+    plugins: [],
+    main: [
+      { name: "index", content: index },
+      { name: "nav", content: undefined },
+      { name: "logo", content: undefined },
+    ],
+  }).write();
+}
+function auth(req, res, next) {
+  if (req.query.password != password) {
+    res.send(400);
+    return;
+  } else {
+    next();
+  }
+}

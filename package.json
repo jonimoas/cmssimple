@@ -11,26 +11,28 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "core-js": "^3.4.3",
+    "core-js": "^3.7.0",
     "cors": "^2.8.5",
     "css": "^3.0.0",
     "express": "^4.17.1",
+    "fs": "0.0.1-security",
     "html2json": "^1.0.2",
     "lowdb": "^1.0.0",
+    "multer": "^1.4.2",
     "npm": "^7.0.12",
-    "prismjs": "^1.21.0",
+    "prismjs": "^1.22.0",
     "v-color": "^1.1.2",
-    "vue": "^2.6.10",
+    "vue": "^2.6.12",
     "vue-cookies": "^1.7.4",
-    "vue-prism-editor": "^0.3.0",
+    "vue-prism-editor": "^1.2.2",
     "vue-slim-tabs": "^0.4.0",
     "vue2-editor": "^2.10.2",
-    "vuedraggable": "^2.23.2"
+    "vuedraggable": "^2.24.3"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "^4.1.0",
-    "@vue/cli-service": "^4.1.0",
-    "vue-template-compiler": "^2.6.10"
+    "@vue/cli-plugin-babel": "^4.5.9",
+    "@vue/cli-service": "^4.5.9",
+    "vue-template-compiler": "^2.6.12"
   },
   "browserslist": [
     "> 1%",
