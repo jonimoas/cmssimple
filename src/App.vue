@@ -126,7 +126,8 @@
         <prism-editor
           v-model="content"
           language="html"
-          :line-numbers="true"
+          :highlight="HTMLhighlighter"
+          line-numbers
         ></prism-editor>
         <br />
         <button @click="saveContent">Save</button>
@@ -142,7 +143,8 @@
         <prism-editor
           v-model="RESTContent"
           language="js"
-          :line-numbers="true"
+          :highlight="JShighlighter" 
+          line-numbers
         ></prism-editor>
         <br />
         <button @click="saveRest">Save</button>
@@ -179,8 +181,13 @@ import { VueEditor } from "vue2-editor";
 import { Tabs, Tab } from "vue-slim-tabs";
 import ColorPicker from "v-color";
 import draggable from "vuedraggable";
-import PrismEditor from "vue-prism-editor";
-import Prism from "prismjs";
+
+import { PrismEditor } from 'vue-prism-editor';
+import 'vue-prism-editor/dist/prismeditor.min.css'; 
+import { highlight, languages } from 'prismjs/components/prism-core';
+import 'prismjs/components/prism-clike';
+import 'prismjs/components/prism-javascript';
+import 'prismjs/themes/prism-tomorrow.css';
 export default {
   name: "app",
   components: {
@@ -217,6 +224,12 @@ export default {
     };
   },
   methods: {
+    JShighlighter(code) {
+        return Prism.highlight(code, Prism.languages.js, "js");
+    },
+    HTMLhighlighter(code) {
+        return Prism.highlight(code, Prism.languages.js, "html");
+    },
     backup:async function(){
       let password = prompt("Enter Admin Password");
       let response = await fetch (this.host + "/backup?password=" + password);
