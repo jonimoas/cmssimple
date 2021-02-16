@@ -1,6 +1,6 @@
 # cmssimple
 
-cmssimple is a fully dockerized cms for text based sites, using lowdb as a database, expressjs as a rest api and vue.js for the editor, offering simplicity and speed both during deployment and during usage.
+cmssimple is a fully dockerized cms for text based sites, vuejs component host and javascript rest api, using lowdb, expressjs and vue.js, offering simplicity and speed both during deployment and during usage.
 
 In order to run the application, you can either use the example docker-compose file, or set the variables manually.
 
@@ -12,9 +12,9 @@ Variables:
       MAIN_PORT: the port that the site will be hosted (hardcoded to 8023 in dockerfile)
       NEW_PORT: the port that is seen from the outside, if forwarding has been applied. Else the same as main.
 
-the editor can be acessed on the /vue/#/editor endpoint of your host
+the editor can be accessed on the /vue/#/editor endpoint of your host
 
-the editor can then be used to add a logo and a color scheme, and then the user can start adding and sorting pages at will, also adding new rest api calls, using the text editor and code editors. The user can also backup and restore the database file. 
+the editor can then be used to add a logo and a color scheme, and then the user can start adding and sorting pages at will, also adding new rest api calls, using the text editor and code editors. The user can also backup and restore the database file and upload vuejs components. 
 
 The rest API editor simply takes a plain javascript function as follows for a call that uses momentjs to return the date and a value that has been sent:
 
@@ -35,6 +35,7 @@ NOTES during deployment.
 The ports are hardcoded in the dockerfiles, to be 8023, if there is a requirement for change, the dockerfiles need to be changed accordingly and the images rebuilt.
 
 The document and code editor for pages do not work well together, you may lose content switching from the code to the document editor.
+
 libraries used:
 
         https://github.com/v-comp/v-color
