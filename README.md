@@ -16,12 +16,6 @@ the editor can be acessed on the /vue/#/editor endpoint of your host
 
 the editor can then be used to add a logo and a color scheme, and then the user can start adding and sorting pages at will, also adding new rest api calls, using the text editor and code editors. The user can also backup and restore the database file. 
 
-NOTES during deployment.
-
-The ports are hardcoded in the dockerfiles, to be 8023, if there is a requirement for change, the dockerfiles need to be changed accordingly and the images rebuilt.
-
-The document and code editor for pages do not work well together, you may lose content switching from the code to the document editor.
-
 The rest API editor simply takes a plain javascript function as follows for a call that uses momentjs to return the date and a value that has been sent:
 
         function(a){var moment=require('moment');console.log(moment()); return [a,moment()];}
@@ -35,6 +29,12 @@ assuming you used 'moment' as the name of the plugin
 You can upload your own .vue files, using the editor have a button for them and access them either from that button 
 or from the /vue/#/componentName endpoint
 
+
+NOTES during deployment.
+
+The ports are hardcoded in the dockerfiles, to be 8023, if there is a requirement for change, the dockerfiles need to be changed accordingly and the images rebuilt.
+
+The document and code editor for pages do not work well together, you may lose content switching from the code to the document editor.
 libraries used:
 
         https://github.com/v-comp/v-color
