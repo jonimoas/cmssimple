@@ -12,7 +12,7 @@ Variables:
       MAIN_PORT: the port that the site will be hosted (hardcoded to 8023 in dockerfile)
       NEW_PORT: the port that is seen from the outside, if forwarding has been applied. Else the same as main.
 
-the editor can be acessed on the /editor endpoint of your host
+the editor can be acessed on the /vue/#/editor endpoint of your host
 
 the editor can then be used to add a logo and a color scheme, and then the user can start adding and sorting pages at will, also adding new rest api calls, using the text editor and code editors. The user can also backup and restore the database file. 
 
@@ -31,6 +31,9 @@ The code itself is in the form of an anonymous function, with one argument for r
         localhost/plugins/moment/momentTest?test=test
 
 assuming you used 'moment' as the name of the plugin
+
+You can upload your own .vue files, using the editor have a button for them and access them either from that button 
+or from the /vue/#/componentName endpoint
 
 libraries used:
 
