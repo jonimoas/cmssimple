@@ -40,7 +40,6 @@ const options = {
 };
 app.use(cors(options));
 app.use(bodyParser.json());
-app.set("view engine", "html");
 const upload = multer({ dest: "./" });
 var myIP = HOST + ":" + ext_port;
 var siteName = NAME;
