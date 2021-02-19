@@ -191,7 +191,6 @@ import { VueEditor } from "vue2-editor";
 import { Tabs, Tab } from "vue-slim-tabs";
 import ColorPicker from "v-color";
 import draggable from "vuedraggable";
-
 import { PrismEditor } from 'vue-prism-editor';
 import 'vue-prism-editor/dist/prismeditor.min.css'; 
 import { highlight, languages } from 'prismjs/components/prism-core';

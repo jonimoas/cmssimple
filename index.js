@@ -96,6 +96,31 @@ app.post("/uploadVue", auth, upload.single("vue"), (req, res) => {
       ],
     });
   }
+  let packages = [];
+  let contents = fs.readFileSync("./src/" + req.file.originalname);
+  for (const l of contents
+    .toString()
+    .split("<script>")[1]
+    .split("</string>")[0]
+    .split(";")) {
+    if (
+      l.indexOf("import") > -1 &&
+      l.indexOf("from") > -1 &&
+      l.indexOf("/") < 0
+    ) {
+      packages.push(
+        l
+          .split("from")[1]
+          .split('"')
+          .join("")
+          .split(" ")
+          .join("")
+          .split("'")
+          .join("")
+      );
+    }
+  }
+  console.log(packages);
   db.get("main")
     .remove({ name: "nav" })
     .write();
@@ -105,7 +130,11 @@ app.post("/uploadVue", auth, upload.single("vue"), (req, res) => {
       .push({ name: "nav", content: navigation.content })
       .write()
   );
-  res.send(200);
+  npm.load(function(err) {
+    npm.commands.install(packages, function(er, data) {
+      res.send(200);
+    });
+  });
 });
 
 //plugin endpoints
