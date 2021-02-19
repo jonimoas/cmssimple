@@ -15,7 +15,6 @@ var cors = require("cors");
 const bodyParser = require("body-parser");
 var html2json = require("html2json").html2json;
 var json2html = require("html2json").json2html;
-var index = require("./index.json");
 var npm = require("npm");
 var exec = require("child_process").exec;
 const multer = require("multer");
@@ -41,6 +40,7 @@ const options = {
 };
 app.use(cors(options));
 app.use(bodyParser.json());
+app.set("view engine", "html");
 const upload = multer({ dest: "./" });
 var myIP = HOST + ":" + ext_port;
 var siteName = NAME;
@@ -488,7 +488,8 @@ function buildVue() {
   fs.writeFileSync("./routes.json", JSON.stringify(routes));
   child = exec("npm run build").stderr.pipe(process.stderr);
 }
-function initDB() {
+async function initDB() {
+  let index = html2json(fs.readFileSync("./default.html").toString());
   const adapter = new FileSync("db.json");
   db = low(adapter);
   db.defaults({
