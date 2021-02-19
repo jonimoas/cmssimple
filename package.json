@@ -11,7 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "core-js": "^3.7.0",
+    "core-js": "^3.9.0",
     "cors": "^2.8.5",
     "css": "^3.0.0",
     "express": "^4.17.1",
@@ -19,8 +19,8 @@
     "html2json": "^1.0.2",
     "lowdb": "^1.0.0",
     "multer": "^1.4.2",
-    "npm": "^7.0.12",
-    "prismjs": "^1.22.0",
+    "npm": "^7.5.4",
+    "prismjs": "^1.23.0",
     "v-color": "^1.1.2",
     "vue": "^2.6.12",
     "vue-cookies": "^1.7.4",
@@ -31,8 +31,8 @@
     "vuedraggable": "^2.24.3"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "^4.5.9",
-    "@vue/cli-service": "^4.5.9",
+    "@vue/cli-plugin-babel": "^4.5.11",
+    "@vue/cli-service": "^4.5.11",
     "vue-template-compiler": "^2.6.12"
   },
   "browserslist": [
