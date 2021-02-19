@@ -55,7 +55,6 @@ app.post("/uploadVue", auth, upload.single("vue"), (req, res) => {
     fs.unlinkSync("./src/" + req.file.originalname);
   } catch (e) {}
   fs.renameSync("./" + req.file.filename, "./src/" + req.file.originalname);
-  buildVue();
   let navigation = db
     .get("main")
     .find({ name: "nav" })
@@ -132,6 +131,7 @@ app.post("/uploadVue", auth, upload.single("vue"), (req, res) => {
   );
   npm.load(function(err) {
     npm.commands.install(packages, function(er, data) {
+      buildVue();
       res.send(200);
     });
   });
