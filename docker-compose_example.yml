@@ -4,7 +4,7 @@ version: "2"
 services:
   #####################################################################################################
   cms:
-    image: jonimoas/cmssimple:0.4
+    image: jonimoas/cmssimple:0.5
     container_name: cmssimple
     restart: always
     environment:
@@ -14,5 +14,5 @@ services:
       MAIN_PORT: 8023
       NEW_PORT: 80
     ports:
-      - "8023:80"
+      - "80:8023"
   #####################################################################################################
